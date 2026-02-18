@@ -198,9 +198,9 @@ st.title('Student Record Management System')
 
 if 'system' not in st.session_state:
     st.session_state.system = StudentSystem()
+    st.session_state.load_data()
 system = st.session_state.system
 
-system.load_data()
 tab1, tab2, tab3 = st.tabs(['Add Student', 'Add Grade', 'View Records'])
 
 with tab1:
