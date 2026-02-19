@@ -15,12 +15,16 @@ class Student:
         return f'Student ID: {self.id}\nStudent name: {self.name}'
 
     def add_grade(self, subject, score, credits):
+            for grade in self.grades:
+                if grade['Subject'].lower() == subject.lower():
+                    return False
             self.grades.append({
                 'Subject' : subject,
                 'Score' : score,
                 'Credits' : credits
             })
-    
+            return True
+
     def calculate_gpa(self):
         total_points = 0
         total_credits = 0
@@ -99,9 +103,9 @@ class StudentSystem:
 
     def add_grade(self, id, subject, score, credits):
         if not self.search_by_id(id):
-            return
+            return False
         else:
-            self.search_by_id(id).add_grade(subject, score, credits)
+            return self.search_by_id(id).add_grade(subject, score, credits)
 
     def get_student_info(self):
         while True:
@@ -189,7 +193,7 @@ class StudentSystem:
             else:
                 for student_grade in student.grades:
                     letter = student.get_letter_grade(student_grade['Score'])
-                    print(f'{student_grade['Subject']} ({letter})')
+                    print(f'{student_grade["Subject"]} ({letter})')
             print('-'*20)
 
 
@@ -198,7 +202,7 @@ st.title('Student Record Management System')
 
 if 'system' not in st.session_state:
     st.session_state.system = StudentSystem()
-    st.session_state.load_data()
+    st.session_state.system.load_data()
 system = st.session_state.system
 
 tab1, tab2, tab3 = st.tabs(['Add Student', 'Add Grade', 'View Records'])
@@ -226,19 +230,25 @@ with tab2:
     if not system.students:
         st.info('Not students yet.')
     else:
-        selected_id = st.selectbox('Select Student', list(system.students.keys()))
+        with st.form('add_grade_form'):
+            selected_id = st.selectbox('Select Student', list(system.students.keys()))
 
-        subject = st.text_input('Subject')
-        score = st.number_input('Score', min_value=0, max_value=100)
-        credits = st.number_input('Credits', min_value=1)
+            subject = st.text_input('Subject')
+            score = st.number_input('Score', min_value=0, max_value=100)
+            credits = st.number_input('Credits', min_value=1)
 
-        if st.button('Add Grade'):
-            if subject:
-                system.add_grade(selected_id, subject, score, credits)
-                system.save_data()
-                st.success('Grade added successfully ✅')
-            else:
-                st.error('Enter subject name')
+            subbmitted = st.form_submit_button('Add Grade')
+            if subbmitted:
+                if subject.strip() == "":
+                    st.error("Please enter subject name")
+                else:
+                    success = system.add_grade(selected_id, subject, score, credits)
+                    if success:
+                        system.save_data()
+                        st.success("Grade added successfully ✅")
+                    else:
+                        st.error("This subject is already added for this student")
+
 
 with tab3:
     st.header('View Records')
